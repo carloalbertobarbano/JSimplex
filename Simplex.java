@@ -38,6 +38,7 @@ class Simplex {
         //System.out.println("Target: " + target + ", transorm factor: " + transformFactor);
         for(int c = 0; c < A[i].length; c++)
           res_row[c] = A[i][c] / transformFactor;
+
         newB[i] = B[i] / transformFactor;
       } else {
 
@@ -91,10 +92,8 @@ class Simplex {
 
     for(int row = 0;row < A.length; row++) {
       if(A[row][entering] > 0) {
-        double sum = -B[row]/A[row][entering]; //B[row] + A[row][entering];
+        double sum = -B[row]/A[row][entering];
         sum = 1 / sum;
-        
-        if(min == 0.0)min = sum;
 
         if(sum < min) {
           min = sum;
@@ -102,7 +101,7 @@ class Simplex {
         }
       }
     }
-    
+
     return lineExitting;
   }
 
@@ -219,8 +218,12 @@ class Simplex {
   }
 
 
+  static int iteration = 0;
   public static void Simplex(double[][] A, double[] B, double C[]) {
+
     if(!IsBestSolution(C)) {
+      System.out.println("---------- SIMPLEX ITERATION " + iteration++ + " ----------");
+
       System.out.println("Applying simplex to: ");
       PrintMatrix(A, B);
 
@@ -253,24 +256,20 @@ class Simplex {
 
   public static void main(String[] args) {
     double[][] A = { { 2, -1, 1, 0, 0  },
-					           { -1, 1, 0, 1, 0  },
-					           {  1, 0, 0, 0, 1  } };
+                     { -1, 1, 0, 1, 0  },
+                     {  1, 0, 0, 0, 1  } };
 
 		double[] B =  { 3,
-					          1,
-					          8 };
+                    1,
+                    8 };
 
     //             x1  x2  x3  x4  x5 t
 		double[] C =  { 3, -1, 0,  0,  0, 0 };
 
 
-    //Simplex(A, B, C);
-    //PrintMatrix(A, B);
-
-    //GenerateSolution(A, B, C);
     Simplex(A, B, C);
 
-    System.out.println("\n\nSolution found: ");
+    System.out.println("\n\nBest Solution found: ");
     System.out.print("z = ");
     for(int i = 0;i < C.length; i++) {
       if(C[i] == 0)continue;
