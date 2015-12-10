@@ -1,4 +1,16 @@
 class Simplex {
+  static boolean debug = false;
+  public static void Print(String s) {
+    if(debug)System.out.print(s);
+  }
+
+  public static void Print(double d) {
+    Print(""+d);
+  }
+  public static void Println(String s) {
+    Print(s + "\n");
+  }
+
   public static boolean IsBestSolution(double[] C) {
     for(int i = 0;i < C.length - 1; i++)
         if(C[i] > 0)
@@ -19,35 +31,37 @@ class Simplex {
       double[] res_row = new double[A[i].length];
       int row = 0;
 
-      //if(i == A.length - 1)row = i-1;
-      //else {
       while(row < A.length-1) {
         if(A[row][j] != 0.0 && row != i)
           break;
 
           row++;
       }
+
       if(row == A.length-1)
         return A[i];
-      //}
 
-      //System.out.println("Pivot line: " + i + ", row chosen: " + row);
+
+      //Println("Pivot line: " + i + ", row chosen: " + row);
+
+      double transformFactor = 0;
 
       if(target == 1) {
-        double transformFactor = A[i][j];
-        //System.out.println("Target: " + target + ", transorm factor: " + transformFactor);
+        transformFactor = A[i][j];
+        //Println("Target: " + target + ", transorm factor: " + transformFactor);
+
         for(int c = 0; c < A[i].length; c++)
           res_row[c] = A[i][c] / transformFactor;
 
         newB[i] = B[i] / transformFactor;
       } else {
 
-        double transformFactor = (target - A[i][j])/A[row][j];
-        //System.out.println("Target: " + target + ", transorm factor: " + transformFactor);
+        transformFactor = (target - A[i][j])/A[row][j];
+        //Println("Target: " + target + ", transorm factor: " + transformFactor);
 
         for(int c = 0; c < A[i].length; c++) {
           res_row[c] = A[i][c] + transformFactor * A[row][c];
-          //System.out.print(res_row[c] + " ");
+          //Print(res_row[c] + " ");
         }
         newB[i] = B[i] + transformFactor * B[row];
      }
@@ -56,7 +70,7 @@ class Simplex {
   }
 
   public static void GaussJordan(double[][] A, double[] B, int i, int j) {
-    double[][] tmpMat = new double[A.length][]; //[A[0].length];
+    double[][] tmpMat = new double[A.length][];
     double[]   tmpB = new double[B.length];
 
 
@@ -86,20 +100,36 @@ class Simplex {
     return entering;
   }
 
+  public static boolean IsColumnPositive(double[][] A, int i) {
+    for(int r = 0; r < A.length; r++)
+      if(A[r][i] < 0)return false;
+    return true;
+  }
   public static int FindExittingVarLine(double[][] A, double[] B, int entering) {
     int lineExitting = 0;
     double min = 0.0;
 
-    for(int row = 0;row < A.length; row++) {
-      if(A[row][entering] > 0) {
-        double sum = -B[row]/A[row][entering];
-        sum = 1 / sum;
 
-        if(sum < min) {
-          min = sum;
+    for(int row = 0;row < A.length; row++) {
+      //if(IsColumnPositive(A, entering)) {
+        if(A[row][entering] > 0) {
+          double quotient = -B[row]/A[row][entering];
+          quotient = 1 / quotient;
+
+          if(quotient < min) {
+            min = quotient;
+            lineExitting = row;
+          }
+        }
+      /*} else {
+        double quotient = -B[row]/A[row][entering];
+        quotient = 1 / quotient;
+
+        if(quotient > min) {
+          min = quotient;
           lineExitting = row;
         }
-      }
+      }*/
     }
 
     return lineExitting;
@@ -130,9 +160,9 @@ class Simplex {
   }
 
   public static void GenerateSolution(double[][] A, double[] B, double[] C) {
-    double[] updatedC = new double[C.length];
+    /*double[] updatedC = new double[C.length];
     for(int i = 0;i < C.length; i++)
-      updatedC[i] = 0.0;
+      updatedC[i] = 0.0;*/
 
     int numBaseVar = 0;
     for(int i = 0;i < C.length - 1; i++) {
@@ -145,21 +175,21 @@ class Simplex {
       if(IsBase(A, i))baseVar[j++] = i;
     }
 
-    System.out.print("Number of base variables: " + numBaseVar +  " { ");
+    Print("Number of base variables: " + numBaseVar +  " { ");
     for(int i = 0;i < numBaseVar; i++)
-      System.out.print("x" + (baseVar[i]+1) + " ");
-    System.out.println("}");
+      Print("x" + (baseVar[i]+1) + " ");
+    Println("}");
 
 
     for(int i = 0;i < C.length - 1; i++) {
-      System.out.println("Testing x" + (i+1));
+      Println("Testing x" + (i+1));
 
         if(IsBase(A, i)) {
           int row = GetBaseRow(A, i);
           double coeff = C[i];
-          System.out.println("\tx" + (i+1) + " is base");
-          System.out.println("\tRow of base var: " + row);
-          System.out.println("\tCoeff in objective f: " + coeff);
+          Println("\tx" + (i+1) + " is base");
+          Println("\tRow of base var: " + row);
+          Println("\tCoeff in objective f: " + coeff);
 
           for(int c = 0; c < C.length; c++) {
             if(c != i) {
@@ -172,22 +202,6 @@ class Simplex {
           C[i] = 0;
         }
     }
-
-    /*for(int i = 0; i < A.length; i++) {
-      for(int j = 0; j < A[i].length + 1; j++) {
-        if(j < A[i].length)
-         updatedC[j] += A[i][j] * C[j];
-        else
-         updatedC[j] += B[i] * C[j];
-      }
-      //if(C[i] != 0)
-      //updatedC[updatedC.length - 1] += B[i]*C[];
-    }*/
-
-    for(int i = 0; i < C.length; i++) {
-      //C[i] = updatedC[i];
-    }
-    //C[C.length - 1] = updatedC[C.length - 1];
   }
 
 
@@ -198,7 +212,7 @@ class Simplex {
     /* Find exitting variable */
     int lineExitting = FindExittingVarLine(A, B, entering);
 
-    System.out.println("Pivot at: " + lineExitting + ", " + entering);
+    Println("Pivot at: " + lineExitting + ", " + entering);
     /* GaussJordan on line of exitting variable with entering variable as pivot */
     GaussJordan(A, B, lineExitting, entering);
 
@@ -206,14 +220,14 @@ class Simplex {
     /* Find new z function */
     GenerateSolution(A, B, C);
 
-    System.out.print("Solution found: z = ");
+    Print("Solution found: z = ");
     for(int i = 0;i < C.length; i++) {
       if(C[i] == 0)continue;
 
-      if(i < C.length - 1)  System.out.print(C[i] + "x" + (i+1) + " + ");
-      else System.out.print(C[i]);
+      if(i < C.length - 1)  Print(C[i] + "x" + (i+1) + " + ");
+      else Print(C[i]);
     }
-    System.out.print("\n");
+    Print("\n");
 
   }
 
@@ -222,16 +236,20 @@ class Simplex {
   public static void Simplex(double[][] A, double[] B, double C[]) {
 
     if(!IsBestSolution(C)) {
-      System.out.println("---------- SIMPLEX ITERATION " + iteration++ + " ----------");
+      Println("---------- SIMPLEX ITERATION " + iteration++ + " ----------");
 
-      System.out.println("Applying simplex to: ");
+      Println("Applying simplex to: ");
       PrintMatrix(A, B);
 
       /* Find new solution */
       FindNewSolution(A, B, C);
 
       try {
-        System.in.read();
+        if(debug) {
+          System.out.println("Press enter to continue..");
+          System.in.read();
+          while((char)System.in.read() != '\n');
+        }
       } catch(Exception e) {
         e.printStackTrace();
       }
@@ -242,29 +260,36 @@ class Simplex {
   }
 
   public static void PrintMatrix(double[][] A, double[] B){
-    System.out.print("\n\n");
+    Print("\n\n");
 
     for(int i = 0;i < A.length; i++) {
       for(int j = 0;j < A[i].length; j++) {
-        System.out.print("\t" + A[i][j]);
+        Print("\t" + A[i][j]);
       }
-      System.out.print("  |\t" + B[i]);
-      System.out.print("\n");
+      Print("  |\t" + B[i]);
+      Print("\n");
     }
-    System.out.print("\n");
+    Print("\n");
   }
 
   public static void main(String[] args) {
-    double[][] A = { { 2, -1, 1, 0, 0  },
-                     { -1, 1, 0, 1, 0  },
-                     {  1, 0, 0, 0, 1  } };
+    if(args.length >= 1)
+      if(args[0].equals("-d") || args[0].equals("-D") || args[0].equals("-debug"))
+        debug = true;
+      else
+        System.out.println("Unknown option: " + args[1]);
+
+
+    double[][] A = { {  2, -1, 1, 0, 0 },
+                     { -1,  1, 0, 1, 0 },
+                     {  1,  0, 0, 0, 1 } };
 
 		double[] B =  { 3,
                     1,
                     8 };
 
-    //             x1  x2  x3  x4  x5 t
-		double[] C =  { 3, -1, 0,  0,  0, 0 };
+    //             x1  x2  x3 x4 x5 t
+		double[] C =  { 3, -1, 0, 0, 0, 0 };
 
 
     Simplex(A, B, C);
@@ -274,7 +299,7 @@ class Simplex {
     for(int i = 0;i < C.length; i++) {
       if(C[i] == 0)continue;
 
-      if(i < C.length - 1)  System.out.print(C[i] + "x" + i + " + ");
+      if(i < C.length - 1)  System.out.print(C[i] + "x" + (i+1) + " + ");
       else System.out.print(C[i]);
     }
     System.out.print("\n");
