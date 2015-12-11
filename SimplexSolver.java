@@ -61,8 +61,9 @@ public class SimplexSolver {
     @param j index of the column in A
     @param target value that the element in (i, j) in A must be transformed to 
     @return double[] - the transformed row in A
+    @param py row of exitting variable 
   */
-  public static double[] PivotTo(double[][] A, double[] B, double[] newB, int i, int j, int target) {
+  public static double[] PivotTo(double[][] A, double[] B, double[] newB, int i, int j, int target, int py) {
       double[] res_row = new double[A[i].length];
       int row = 0;
 
@@ -72,33 +73,25 @@ public class SimplexSolver {
 
           row++;
       }
-
       if(row == A.length-1)
         return A[i];
-
-
-      //Println("Pivot line: " + i + ", row chosen: " + row);
 
       double transformFactor = 0;
 
       if(target == 1) {
         transformFactor = A[i][j];
-        //Println("Target: " + target + ", transorm factor: " + transformFactor);
 
         for(int c = 0; c < A[i].length; c++)
           res_row[c] = A[i][c] / transformFactor;
 
         newB[i] = B[i] / transformFactor;
-      } else {
-
-        transformFactor = (target - A[i][j])/A[row][j];
-        //Println("Target: " + target + ", transorm factor: " + transformFactor);
-
-        for(int c = 0; c < A[i].length; c++) {
-          res_row[c] = A[i][c] + transformFactor * A[row][c];
-          //Print(res_row[c] + " ");
-        }
-        newB[i] = B[i] + transformFactor * B[row];
+      } else {   
+        transformFactor = (target - A[i][j])/A[py][j];
+     
+        for(int c = 0; c < A[i].length; c++) 
+          res_row[c] = A[i][c] + transformFactor * A[py][c];
+      
+        newB[i] = B[i] + transformFactor * B[py];
      }
 
       return res_row;
@@ -110,17 +103,18 @@ public class SimplexSolver {
    @param B is the explicit terms vector
    @param i index of the row in A
    @param j index of the column in A
+   @param py row of exitting variable 
   */ 
-  public static void GaussJordan(double[][] A, double[] B, int i, int j) {
+  public static void GaussJordan(double[][] A, double[] B, int i, int j, int py) {
     double[][] tmpMat = new double[A.length][];
     double[]   tmpB = new double[B.length];
 
 
-    tmpMat[i] = PivotTo(A, B, tmpB, i, j, 1);
+    tmpMat[i] = PivotTo(A, B, tmpB, i, j, 1, py);
 
     for(int r = 0; r < A.length; r++) {
       if(r != i)
-        tmpMat[r] = PivotTo(A, B, tmpB, r, j, 0);
+        tmpMat[r] = PivotTo(A, B, tmpB, r, j, 0, py);
     }
 
     CopyMat(tmpMat, A);
@@ -150,11 +144,11 @@ public class SimplexSolver {
   /**
     @param A is the constraints coefficients matrix
     @param i is the index of the column to check
-    @return true if all the elements of the i-th column in the matrix A are positive.
+    @return true if all the elements of the i-th column in the matrix A are negative.
   */
-  public static boolean IsColumnPositive(double[][] A, int i) {
+  public static boolean IsColumnNegative(double[][] A, int i) {
     for(int r = 0; r < A.length; r++)
-      if(A[r][i] < 0)return false;
+      if(A[r][i] > 0)return false;
     return true;
   }
   
@@ -171,7 +165,7 @@ public class SimplexSolver {
 
 
     for(int row = 0;row < A.length; row++) {
-      //if(IsColumnPositive(A, entering)) {
+      if(!IsColumnNegative(A, entering)) {
         if(A[row][entering] > 0) {
           double quotient = -B[row]/A[row][entering];
           quotient = 1 / quotient;
@@ -181,7 +175,7 @@ public class SimplexSolver {
             lineExitting = row;
           }
         }
-      /*} else {
+      } else {
         double quotient = -B[row]/A[row][entering];
         quotient = 1 / quotient;
 
@@ -189,7 +183,7 @@ public class SimplexSolver {
           min = quotient;
           lineExitting = row;
         }
-      }*/
+      }
     }
 
     return lineExitting;
@@ -234,10 +228,6 @@ public class SimplexSolver {
     @param C is the objective function coefficients vector, with the explicit term in last position.
   */
   public static void GenerateSolution(double[][] A, double[] B, double[] C) {
-    /*double[] updatedC = new double[C.length];
-    for(int i = 0;i < C.length; i++)
-      updatedC[i] = 0.0;*/
-
     int numBaseVar = 0;
     for(int i = 0;i < C.length - 1; i++) {
       if(IsBase(A, i))numBaseVar ++;
@@ -295,7 +285,7 @@ public class SimplexSolver {
 
     Println("Pivot at: " + lineExitting + ", " + entering);
     /* GaussJordan on line of exitting variable with entering variable as pivot */
-    GaussJordan(A, B, lineExitting, entering);
+    GaussJordan(A, B, lineExitting, entering, lineExitting);
 
     PrintMatrix(A, B);
     /* Find new z function */

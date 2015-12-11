@@ -7,16 +7,16 @@ class JSimplex {
         System.out.println("Unknown option: " + args[1]);
 
 
-    double[][] A = { {  2, -1, 1, 0, 0 },
-                     { -1,  1, 0, 1, 0 },
+    double[][] A = { {  1, -1, 1, 0, 0 },
+                     {  2,  1, 0, 1, 0 },
                      {  1,  0, 0, 0, 1 } };
 
 		double[] B =  { 3,
-                    1,
-                    8 };
+                    5,
+                    2 };
 
     //             x1  x2  x3 x4 x5 t
-		double[] C =  { 3, -1, 0, 0, 0, 0 };
+		double[] C =  { 4, 1, 0, 0, 0, 0 };
 
 
     SimplexSolver.Simplex(A, B, C);
