@@ -1,16 +1,35 @@
 public class SimplexSolver {
   static boolean debug = false;
+  
+  /**
+    Print messages in debug mode
+    @param s string to be printed
+  */
   public static void Print(String s) {
     if(debug)System.out.print(s);
   }
-
+  
+  /**
+    Print messages in debug mode - double overload.
+    @param d double to be printed
+  */
   public static void Print(double d) {
     Print(""+d);
   }
+  
+  /**
+    Print messages in debug mode
+    @param s string to be printed
+  */
   public static void Println(String s) {
     Print(s + "\n");
   }
-
+  
+  /**
+   Check if the current solution is the best one, by checking if coefficients in C are negative.
+   @param C is the objective function coefficients vector, with the explicit term in last position.
+   @return true if C contains the best solution, false otherwise 
+  */
   public static boolean IsBestSolution(double[] C) {
     for(int i = 0;i < C.length - 1; i++)
         if(C[i] > 0)
@@ -18,7 +37,12 @@ public class SimplexSolver {
 
     return true;
   }
-
+  
+  /** 
+    Copies one matrix to another one
+    @param src source matrix
+    @param dst destination matrix. dst dimensions must be the same as src
+  */
   public static void CopyMat(double[][] src, double[][] dst) {
     for(int i = 0; i < src.length; i++) {
       for(int j = 0;j < src[i].length; j++) {
@@ -27,6 +51,17 @@ public class SimplexSolver {
     }
   }
 
+  /** 
+    Transform the element at (i, j) in A to the value of target, by calculating a transform factor to multiply the
+    i-th line with.
+    @param A is the constraints coefficients matrix
+    @param B is the explicit terms vector
+    @param newB is the resultant explicit terms vector after PivotTo() execution
+    @param i index of the row in A
+    @param j index of the column in A
+    @param target value that the element in (i, j) in A must be transformed to 
+    @return double[] - the transformed row in A
+  */
   public static double[] PivotTo(double[][] A, double[] B, double[] newB, int i, int j, int target) {
       double[] res_row = new double[A[i].length];
       int row = 0;
@@ -68,7 +103,14 @@ public class SimplexSolver {
 
       return res_row;
   }
-
+  
+  /** 
+   Performs a Gauss-Jordan reduction using the element in A at index (i, j) as pivot.
+   @param A is the constraints coefficients matrix
+   @param B is the explicit terms vector
+   @param i index of the row in A
+   @param j index of the column in A
+  */ 
   public static void GaussJordan(double[][] A, double[] B, int i, int j) {
     double[][] tmpMat = new double[A.length][];
     double[]   tmpB = new double[B.length];
@@ -87,6 +129,11 @@ public class SimplexSolver {
       B[t] = tmpB[t];
   }
 
+  /** 
+    Finds the next variable to enter base.
+    @param C is the objective function coefficients vector, with the explicit term in last position.
+    @return int the index of the column corresponding to the entering variable. 
+  */
   public static int FindEnteringVar(double[] C) {
     double max = 0.0;
     int entering = 0;
@@ -100,11 +147,24 @@ public class SimplexSolver {
     return entering;
   }
 
+  /**
+    @param A is the constraints coefficients matrix
+    @param i is the index of the column to check
+    @return true if all the elements of the i-th column in the matrix A are positive.
+  */
   public static boolean IsColumnPositive(double[][] A, int i) {
     for(int r = 0; r < A.length; r++)
       if(A[r][i] < 0)return false;
     return true;
   }
+  
+  /**
+    Finds the line where GJ reduction must be applied.
+    @param A is the constraints coefficients matrix
+    @param B is the explicit terms vector
+    @param entering is the index of the entering variable, returned by FindEnteringVar(double[] C) 
+    @return int the index of the row in the A matrix, which is the line where Gauss-Jordan reduction has to be applied.
+  */
   public static int FindExittingVarLine(double[][] A, double[] B, int entering) {
     int lineExitting = 0;
     double min = 0.0;
@@ -134,7 +194,15 @@ public class SimplexSolver {
 
     return lineExitting;
   }
-
+  
+  /**
+    Check if a variable is a base variable, by checking if the corresponding column in the constraints matrix is an identity
+    column.
+    
+    @param A is the constraints coefficients matrix.
+    @param i is the variable (column in the matrix) to check.
+    @return true if the variable at the i-th column is in base, false oterwhise.
+  */
   public static boolean IsBase(double[][] A, int i) {
       boolean one_found = false;
 
@@ -159,6 +227,12 @@ public class SimplexSolver {
     return 0;
   }
 
+  /**
+    Generate new coefficents for the objective functions from the updated constraints matrix.
+    @param A is the constraints coefficients matrix.
+    @param B is the explicit terms vector.
+    @param C is the objective function coefficients vector, with the explicit term in last position.
+  */
   public static void GenerateSolution(double[][] A, double[] B, double[] C) {
     /*double[] updatedC = new double[C.length];
     for(int i = 0;i < C.length; i++)
@@ -204,7 +278,14 @@ public class SimplexSolver {
     }
   }
 
-
+  /**
+    Finds a new objective function by swapping base variables, and performing 
+    a Gauss-Jordan reduction on constraints matrix.
+  
+    @param A is the constraints coefficients matrix.
+    @param B is the explicit terms vector.
+    @param C is the objective function coefficients vector, with the explicit term in last position.
+  */
   public static void FindNewSolution(double[][] A, double[] B, double[] C) {
     /* Find entering variable */
     int entering = FindEnteringVar(C);
@@ -233,6 +314,12 @@ public class SimplexSolver {
 
 
   static int iteration = 0;
+  /**
+    Perform Simplex algorithm until the best solution is found.
+    @param A is the constraints coefficients matrix.
+    @param B is the explicit terms vector.
+    @param C is the objective function coefficients vector, with the explicit term in last position.
+  */
   public static void Simplex(double[][] A, double[] B, double C[]) {
 
     if(!IsBestSolution(C)) {
