@@ -1,6 +1,6 @@
 public class SimplexSolver {
   static boolean debug = false;
-  
+
   /**
     Print messages in debug mode
     @param s string to be printed
@@ -8,7 +8,7 @@ public class SimplexSolver {
   public static void Print(String s) {
     if(debug)System.out.print(s);
   }
-  
+
   /**
     Print messages in debug mode - double overload.
     @param d double to be printed
@@ -16,7 +16,7 @@ public class SimplexSolver {
   public static void Print(double d) {
     Print(""+d);
   }
-  
+
   /**
     Print messages in debug mode
     @param s string to be printed
@@ -24,11 +24,11 @@ public class SimplexSolver {
   public static void Println(String s) {
     Print(s + "\n");
   }
-  
+
   /**
    Check if the current solution is the best one, by checking if coefficients in C are negative.
    @param C is the objective function coefficients vector, with the explicit term in last position.
-   @return true if C contains the best solution, false otherwise 
+   @return true if C contains the best solution, false otherwise
   */
   public static boolean IsBestSolution(double[] C) {
     for(int i = 0;i < C.length - 1; i++)
@@ -37,8 +37,8 @@ public class SimplexSolver {
 
     return true;
   }
-  
-  /** 
+
+  /**
     Copies one matrix to another one
     @param src source matrix
     @param dst destination matrix. dst dimensions must be the same as src
@@ -51,7 +51,7 @@ public class SimplexSolver {
     }
   }
 
-  /** 
+  /**
     Transform the element at (i, j) in A to the value of target, by calculating a transform factor to multiply the
     i-th line with.
     @param A is the constraints coefficients matrix
@@ -59,9 +59,9 @@ public class SimplexSolver {
     @param newB is the resultant explicit terms vector after PivotTo() execution
     @param i index of the row in A
     @param j index of the column in A
-    @param target value that the element in (i, j) in A must be transformed to 
+    @param target value that the element in (i, j) in A must be transformed to
     @return double[] - the transformed row in A
-    @param py row of exitting variable 
+    @param py row of exitting variable
   */
   public static double[] PivotTo(double[][] A, double[] B, double[] newB, int i, int j, int target, int py) {
       double[] res_row = new double[A[i].length];
@@ -85,36 +85,35 @@ public class SimplexSolver {
           res_row[c] = A[i][c] / transformFactor;
 
         newB[i] = B[i] / transformFactor;
-      } else {   
+      } else {
         transformFactor = (target - A[i][j])/A[py][j];
-     
-        for(int c = 0; c < A[i].length; c++) 
+
+        for(int c = 0; c < A[i].length; c++)
           res_row[c] = A[i][c] + transformFactor * A[py][c];
-      
+
         newB[i] = B[i] + transformFactor * B[py];
      }
 
       return res_row;
   }
-  
-  /** 
+
+  /**
    Performs a Gauss-Jordan reduction using the element in A at index (i, j) as pivot.
    @param A is the constraints coefficients matrix
    @param B is the explicit terms vector
-   @param i index of the row in A
-   @param j index of the column in A
-   @param py row of exitting variable 
-  */ 
-  public static void GaussJordan(double[][] A, double[] B, int i, int j, int py) {
+   @param i index of the row in A (line of exitting variable)
+   @param j index of the column in A (column of entering variable)
+  */
+  public static void GaussJordan(double[][] A, double[] B, int i, int j) {
     double[][] tmpMat = new double[A.length][];
     double[]   tmpB = new double[B.length];
 
 
-    tmpMat[i] = PivotTo(A, B, tmpB, i, j, 1, py);
+    tmpMat[i] = PivotTo(A, B, tmpB, i, j, 1, i);
 
     for(int r = 0; r < A.length; r++) {
       if(r != i)
-        tmpMat[r] = PivotTo(A, B, tmpB, r, j, 0, py);
+        tmpMat[r] = PivotTo(A, B, tmpB, r, j, 0, i);
     }
 
     CopyMat(tmpMat, A);
@@ -123,10 +122,10 @@ public class SimplexSolver {
       B[t] = tmpB[t];
   }
 
-  /** 
+  /**
     Finds the next variable to enter base.
     @param C is the objective function coefficients vector, with the explicit term in last position.
-    @return int the index of the column corresponding to the entering variable. 
+    @return int the index of the column corresponding to the entering variable.
   */
   public static int FindEnteringVar(double[] C) {
     double max = 0.0;
@@ -151,12 +150,12 @@ public class SimplexSolver {
       if(A[r][i] > 0)return false;
     return true;
   }
-  
+
   /**
     Finds the line where GJ reduction must be applied.
     @param A is the constraints coefficients matrix
     @param B is the explicit terms vector
-    @param entering is the index of the entering variable, returned by FindEnteringVar(double[] C) 
+    @param entering is the index of the entering variable, returned by FindEnteringVar(double[] C)
     @return int the index of the row in the A matrix, which is the line where Gauss-Jordan reduction has to be applied.
   */
   public static int FindExittingVarLine(double[][] A, double[] B, int entering) {
@@ -188,11 +187,11 @@ public class SimplexSolver {
 
     return lineExitting;
   }
-  
+
   /**
     Check if a variable is a base variable, by checking if the corresponding column in the constraints matrix is an identity
     column.
-    
+
     @param A is the constraints coefficients matrix.
     @param i is the variable (column in the matrix) to check.
     @return true if the variable at the i-th column is in base, false oterwhise.
@@ -213,6 +212,12 @@ public class SimplexSolver {
       return true && one_found;
   }
 
+  /**
+    Given a base column, returns the line of A corresponding to the base variable
+    @param A is the constraints coefficients matrix.
+    @param i is the index of the base (identity) column
+    @return the index of the row in A corresponding to the base variable
+  */
   public static int GetBaseRow(double[][] A, int i) {
     for(int r = 0; r < A.length; r++) {
       if(A[r][i] == 1)
@@ -269,9 +274,9 @@ public class SimplexSolver {
   }
 
   /**
-    Finds a new objective function by swapping base variables, and performing 
+    Finds a new objective function by swapping base variables, and performing
     a Gauss-Jordan reduction on constraints matrix.
-  
+
     @param A is the constraints coefficients matrix.
     @param B is the explicit terms vector.
     @param C is the objective function coefficients vector, with the explicit term in last position.
@@ -285,7 +290,7 @@ public class SimplexSolver {
 
     Println("Pivot at: " + lineExitting + ", " + entering);
     /* GaussJordan on line of exitting variable with entering variable as pivot */
-    GaussJordan(A, B, lineExitting, entering, lineExitting);
+    GaussJordan(A, B, lineExitting, entering);
 
     PrintMatrix(A, B);
     /* Find new z function */
